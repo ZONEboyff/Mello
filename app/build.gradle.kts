@@ -40,6 +40,13 @@ android {
 }
 
 dependencies {
+    implementation(libs.retrofit)
+    implementation(libs.retrofit2.converter.gson)
+    implementation(libs.okhttp)
+    implementation(libs.firebase.storage)
+    implementation(libs.glide)
+    annotationProcessor(libs.compiler)
+    implementation(libs.circleimageview)
     implementation(libs.firebase.firestore)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)

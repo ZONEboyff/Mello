@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "681231356282",
-    "project_id": "mello-9b618",
-    "storage_bucket": "mello-9b618.firebasestorage.app"
+    "project_number": "592520555600",
+    "project_id": "mello-1e0ed",
+    "storage_bucket": "mello-1e0ed.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:681231356282:android:d909eda60aaed828d046c3",
+        "mobilesdk_app_id": "1:592520555600:android:27f54be1c6758f042e3555",
         "android_client_info": {
           "package_name": "com.example.mello"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBfmRUfMkzMiwg9IXi87CSbUPu48e1zUok"
+          "current_key": "AIzaSyC8u9PBbHfqKVznzCsjsQYqpvURbMHf8N0"
         }
       ],
       "services": {

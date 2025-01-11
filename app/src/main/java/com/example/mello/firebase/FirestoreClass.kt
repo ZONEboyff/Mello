@@ -9,6 +9,7 @@ import com.example.mello.activities.MainActivity
 import com.example.mello.activities.MyProfileActivity
 import com.example.mello.activities.SignInActivity
 import com.example.mello.activities.SignUpActivity
+import com.example.mello.activities.TaskListActivity
 import com.example.mello.models.Board
 import com.example.mello.models.User
 import com.example.mello.utils.Constants
@@ -38,7 +39,7 @@ class FirestoreClass {
         }
         return currentUserID
     }
-    fun loadUserData(activity: Activity) {
+    fun loadUserData(activity: Activity,readBoardsList:Boolean = false){
         mFirestore.collection(Constants.USERS)
             .document(getCurrentUserId())
             .get()
@@ -49,7 +50,7 @@ class FirestoreClass {
                         activity.signInSuccess(loggedInUser)
                     }
                     is MainActivity ->{
-                        activity.updateNavigationUserDetails(loggedInUser)
+                        activity.updateNavigationUserDetails(loggedInUser,readBoardsList)
                     }
                     is MyProfileActivity ->{
                         activity.setUserDataInUI(loggedInUser)
@@ -109,6 +110,41 @@ class FirestoreClass {
             .addOnFailureListener { e ->
                 activity.hideProgressDialog()
                 Log.e(activity.javaClass.simpleName, "Error while creating a board.", e)
+            }
+    }
+    fun getBoardsList(activity: MainActivity) {
+        mFirestore.collection(Constants.BOARDS)
+            .whereArrayContains(Constants.ASSIGNED_TO, getCurrentUserId())
+            .get()
+            .addOnSuccessListener { document ->
+                Log.i(activity.javaClass.simpleName, document.documents.toString())
+                val boardList: ArrayList<Board> = ArrayList()
+                for (i in document.documents) {
+                    val board = i.toObject(Board::class.java)!!
+                    board.documentId = i.id
+                    boardList.add(board)
+                }
+                activity.populateBoardsListToUI(boardList)
+            }
+            .addOnFailureListener { e ->
+                activity.hideProgressDialog()
+                Log.e(activity.javaClass.simpleName, "Error while creating a board.", e)
+            }
+    }
+
+    fun getBoardDetails(taskListActivity: TaskListActivity, boardDocumentId: String) {
+        mFirestore.collection(Constants.BOARDS)
+            .document(boardDocumentId)
+            .get()
+            .addOnSuccessListener { document ->
+                Log.i(taskListActivity.javaClass.simpleName, document.toString())
+                val board = document.toObject(Board::class.java)!!
+                board.documentId = document.id
+                taskListActivity.boardDetails(board)
+            }
+            .addOnFailureListener { e ->
+                taskListActivity.hideProgressDialog()
+                Log.e(taskListActivity.javaClass.simpleName, "Error while creating a board.", e)
             }
     }
 }

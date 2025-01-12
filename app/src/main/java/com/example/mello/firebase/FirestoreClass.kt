@@ -4,6 +4,7 @@ import android.app.Activity
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import com.example.mello.activities.CardDetailsActivity
 import com.example.mello.activities.CreateBoardActivity
 import com.example.mello.activities.MainActivity
 import com.example.mello.activities.MembersActivity
@@ -132,21 +133,29 @@ class FirestoreClass {
                 Log.e(activity.javaClass.simpleName, "Error while creating a board.", e)
             }
     }
-    fun addUpdateTaskList(activity: TaskListActivity, board: Board) {
+    fun addUpdateTaskList(activity: Activity, board: Board) {
         val taskListHashMap = HashMap<String, Any>()
         taskListHashMap[Constants.TASK_LIST] = board.taskList
         mFirestore.collection(Constants.BOARDS)
             .document(board.documentId)
             .update(taskListHashMap)
             .addOnSuccessListener {
-                activity.addUpdateTaskListSuccess()
+                Log.e(activity.javaClass.simpleName, "TaskList updated successfully.")
+                if (activity is TaskListActivity) {
+                    activity.addUpdateTaskListSuccess()
+                } else if (activity is CardDetailsActivity) {
+                    activity.addUpdateTaskListSuccess()
+                }
             }
             .addOnFailureListener { e ->
-                activity.hideProgressDialog()
+                if (activity is TaskListActivity) {
+                    activity.hideProgressDialog()
+                } else if (activity is CardDetailsActivity) {
+                    activity.hideProgressDialog()
+                }
                 Log.e(activity.javaClass.simpleName, "Error while creating a board.", e)
             }
     }
-
     fun getBoardDetails(taskListActivity: TaskListActivity, boardDocumentId: String) {
         mFirestore.collection(Constants.BOARDS)
             .document(boardDocumentId)

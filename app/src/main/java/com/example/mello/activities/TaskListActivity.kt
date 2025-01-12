@@ -35,10 +35,11 @@ class TaskListActivity : BaseActivity() {
         caller: ComponentCaller
     ) {
         super.onActivityResult(requestCode, resultCode, data, caller)
-        if (resultCode == RESULT_OK && requestCode == MEMBERS_REQUEST_CODE) {
+        if (resultCode == RESULT_OK && requestCode == MEMBERS_REQUEST_CODE|| requestCode == CARD_DETAILS_REQUEST_CODE) {
             showProgressDialog(resources.getString(R.string.please_wait))
             FirestoreClass().getBoardDetails(this, mBoardDocumentId)
-        } else {
+        }
+        else {
             Log.e("Cancelled", "Cancelled")
         }
     }

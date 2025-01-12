@@ -109,9 +109,9 @@ open class TaskListItemsAdapter(
             rvCardList.adapter = adapter
             adapter.setOnClickListener(
                 object : CardListItemsAdapter.OnClickListener{
-                    override fun onClick(position: Int, card: com.example.mello.models.Card) {
+                    override fun onClick(cardPosition:Int) {
                         if(context is TaskListActivity){
-                            context.cardDetails(position, position)
+                            context.cardDetails(position, cardPosition)
                         }
                     }
                 }

@@ -1,7 +1,9 @@
 package com.example.mello.activities
 
+import android.app.ComponentCaller
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.widget.Toolbar
@@ -14,16 +16,31 @@ import com.example.mello.utils.Constants
 
 class TaskListActivity : BaseActivity() {
     private lateinit var mBoardDetails: Board
+    private lateinit var mBoardDocumentId: String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_task_list)
-        var boardDocumentId = ""
         if (intent.hasExtra("documentId")) {
-            boardDocumentId = intent.getStringExtra("documentId")!!
+            mBoardDocumentId = intent.getStringExtra("documentId")!!
         }
         showProgressDialog(resources.getString(R.string.please_wait))
-        FirestoreClass().getBoardDetails(this, boardDocumentId)
+        FirestoreClass().getBoardDetails(this, mBoardDocumentId)
+    }
+
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?,
+        caller: ComponentCaller
+    ) {
+        super.onActivityResult(requestCode, resultCode, data, caller)
+        if (resultCode == RESULT_OK && requestCode == MEMBERS_REQUEST_CODE) {
+            showProgressDialog(resources.getString(R.string.please_wait))
+            FirestoreClass().getBoardDetails(this, mBoardDocumentId)
+        } else {
+            Log.e("Cancelled", "Cancelled")
+        }
     }
 
     fun boardDetails(board: Board){
@@ -96,9 +113,22 @@ class TaskListActivity : BaseActivity() {
             R.id.action_members -> {
                 val intent = Intent(this, MembersActivity::class.java)
                 intent.putExtra(Constants.BOARD_DETAIL, mBoardDetails)
-                startActivity(intent)
+                startActivityForResult(intent, MEMBERS_REQUEST_CODE)
+                return true
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+    companion object{
+        const val MEMBERS_REQUEST_CODE: Int = 13
+        const val CARD_DETAILS_REQUEST_CODE: Int = 14
+    }
+    fun cardDetails(taskListPosition: Int, cardPosition: Int){
+        val intent = Intent(this, CardDetailsActivity::class.java)
+        intent.putExtra(Constants.BOARD_DETAIL, mBoardDetails)
+        intent.putExtra(Constants.TASK_LIST_ITEM_POSITION, taskListPosition)
+        intent.putExtra(Constants.CARD_LIST_ITEM_POSITION, cardPosition)
+        intent.putExtra(Constants.BOARD_MEMBERS_LIST, mBoardDetails.assignedTo)
+        startActivityForResult(intent, CARD_DETAILS_REQUEST_CODE)
     }
 }

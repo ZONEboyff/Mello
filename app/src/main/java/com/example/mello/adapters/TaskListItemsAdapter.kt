@@ -107,6 +107,15 @@ open class TaskListItemsAdapter(
             rvCardList.setHasFixedSize(true)
             val adapter = CardListItemsAdapter(context, model.cards)
             rvCardList.adapter = adapter
+            adapter.setOnClickListener(
+                object : CardListItemsAdapter.OnClickListener{
+                    override fun onClick(position: Int, card: com.example.mello.models.Card) {
+                        if(context is TaskListActivity){
+                            context.cardDetails(position, position)
+                        }
+                    }
+                }
+            )
         }
     }
     override fun getItemCount(): Int {

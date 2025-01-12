@@ -5,17 +5,20 @@ import android.os.Parcelable
 
 data class Task(
     val title: String = "",
-    val created_at: Long = 0,
+    val createdBy: String = "",
+    val cards: ArrayList<Card> = ArrayList()
 ):Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString()!!,
-        parcel.readLong()
+        parcel.readString()!!,
+        parcel.createTypedArrayList(Card.CREATOR)!!
     ) {
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(title)
-        parcel.writeLong(created_at)
+        parcel.writeString(createdBy)
+        parcel.writeTypedList(cards)
     }
 
     override fun describeContents(): Int {

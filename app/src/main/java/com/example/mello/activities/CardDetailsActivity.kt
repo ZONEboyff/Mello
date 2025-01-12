@@ -10,12 +10,16 @@ import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.recyclerview.widget.GridLayoutManager
 import com.example.mello.R
 import com.example.mello.dialogs.LabelColorListDialog
+import com.example.mello.dialogs.MembersListDialog
 import com.example.mello.firebase.FirestoreClass
 import com.example.mello.models.Board
 import com.example.mello.models.Card
+import com.example.mello.models.SelectedMembers
 import com.example.mello.models.Task
+import com.example.mello.models.User
 import com.example.mello.utils.Constants
 
 class CardDetailsActivity : BaseActivity() {
@@ -23,6 +27,7 @@ class CardDetailsActivity : BaseActivity() {
     private var mTaskListPosition : Int = -1
     private var mCardListPosition : Int = -1
     private var mSelectedColor = ""
+    private lateinit var mMembersDetailList:ArrayList<User>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -33,6 +38,10 @@ class CardDetailsActivity : BaseActivity() {
         etNameCardDetails.setText(mBoardDetails.taskList[mTaskListPosition].cards[mCardListPosition].name)
         etNameCardDetails.setSelection(etNameCardDetails.text.toString().length)
         val btnUpdateCardDetails = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_update_card_details)
+        mSelectedColor = mBoardDetails.taskList[mTaskListPosition].cards[mCardListPosition].labelColor
+        if(mSelectedColor.isNotEmpty()){
+            setColor()
+        }
         btnUpdateCardDetails.setOnClickListener {
             if(etNameCardDetails.text.toString().isNotEmpty()) {
                 updateCardDetails()
@@ -44,6 +53,11 @@ class CardDetailsActivity : BaseActivity() {
         tvSelectLabelColor.setOnClickListener {
             labelColorsListDialog()
         }
+        val tvSelectMembers = findViewById<TextView>(R.id.tv_select_members)
+        tvSelectMembers.setOnClickListener {
+            membersListDialog()
+        }
+        setupSelectedMembersList()
     }
     private fun getIntentData(){
         if(intent.hasExtra(Constants.BOARD_DETAIL)){
@@ -54,6 +68,9 @@ class CardDetailsActivity : BaseActivity() {
         }
         if(intent.hasExtra(Constants.CARD_LIST_ITEM_POSITION)){
             mCardListPosition = intent.getIntExtra(Constants.CARD_LIST_ITEM_POSITION,-1)
+        }
+        if(intent.hasExtra(Constants.BOARD_MEMBERS_LIST)){
+            mMembersDetailList = intent.getParcelableArrayListExtra(Constants.BOARD_MEMBERS_LIST)!!
         }
     }
 
@@ -86,6 +103,8 @@ class CardDetailsActivity : BaseActivity() {
             mBoardDetails.taskList[mTaskListPosition].cards[mCardListPosition].assignedTo,
             mSelectedColor
         )
+        val taskList:ArrayList<Task> = mBoardDetails.taskList
+        taskList.removeAt(taskList.size-1)
         mBoardDetails.taskList[mTaskListPosition].cards[mCardListPosition] = card
         showProgressDialog(resources.getString(R.string.please_wait))
         FirestoreClass().addUpdateTaskList(this,mBoardDetails)
@@ -150,5 +169,77 @@ class CardDetailsActivity : BaseActivity() {
             }
         }
         labelColorListDialog.show()
+    }
+    private fun membersListDialog() {
+        val cardAssignedMembersList =
+            mBoardDetails.taskList[mTaskListPosition].cards[mCardListPosition].assignedTo
+        if (cardAssignedMembersList.size > 0) {
+                        for (i in mMembersDetailList.indices) {
+                for (j in cardAssignedMembersList) {
+                    if (mMembersDetailList[i].id == j) {
+                        mMembersDetailList[i].selected = true
+                    }
+                }
+            }
+        } else {
+            for (i in mMembersDetailList.indices) {
+                mMembersDetailList[i].selected = false
+            }
+        }
+        val listDialog = object : MembersListDialog(
+            this@CardDetailsActivity,
+            mMembersDetailList,
+            resources.getString(R.string.str_select_members)
+        ) {
+            override fun onItemSelected(user: User, action: String) {
+                if (action == Constants.SELECT) {
+                    if (!mBoardDetails.taskList[mTaskListPosition].cards[mCardListPosition].assignedTo.contains(user.id)) {
+                        mBoardDetails.taskList[mTaskListPosition].cards[mCardListPosition].assignedTo.add(user.id)
+                    }
+                } else {
+                    mBoardDetails.taskList[mTaskListPosition].cards[mCardListPosition].assignedTo.remove(user.id)
+                    for (i in mMembersDetailList.indices) {
+                        if (mMembersDetailList[i].id == user.id) {
+                            mMembersDetailList[i].selected = false
+                        }
+                    }
+                }
+                setupSelectedMembersList()
+            }
+        }
+        listDialog.show()
+    }
+    private fun setupSelectedMembersList(){
+        val cardAssignedMembersList =
+            mBoardDetails.taskList[mTaskListPosition].cards[mCardListPosition].assignedTo
+        val selectedMembersList:ArrayList<SelectedMembers> = ArrayList()
+        for(i in mMembersDetailList.indices){
+            for(j in cardAssignedMembersList){
+                if(mMembersDetailList[i].id == j){
+                    val selectedMember = SelectedMembers(
+                        mMembersDetailList[i].id,
+                        mMembersDetailList[i].image
+                    )
+                    selectedMembersList.add(selectedMember)
+                }
+            }
+        }
+        if(selectedMembersList.size>0) {
+            selectedMembersList.add(SelectedMembers("", ""))
+            findViewById<TextView>(R.id.tv_select_members).visibility = android.view.View.GONE
+            val rvSelectedMembersList = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rv_selected_members_list)
+            rvSelectedMembersList.visibility = android.view.View.VISIBLE
+            rvSelectedMembersList.layoutManager = GridLayoutManager(this, 6)
+            val adapter = com.example.mello.adapters.CardMemberListItemsAdapter(this, selectedMembersList,true)
+            rvSelectedMembersList.adapter = adapter
+            adapter.setOnClickListener(object : com.example.mello.adapters.CardMemberListItemsAdapter.OnClickListener {
+                override fun onClick() {
+                    membersListDialog()
+                }
+            })
+        }else{
+            findViewById<TextView>(R.id.tv_select_members).visibility = android.view.View.VISIBLE
+            findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rv_selected_members_list).visibility = android.view.View.GONE
+        }
     }
 }

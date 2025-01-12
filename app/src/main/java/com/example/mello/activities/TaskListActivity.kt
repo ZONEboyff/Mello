@@ -12,11 +12,13 @@ import com.example.mello.firebase.FirestoreClass
 import com.example.mello.models.Board
 import com.example.mello.models.Card
 import com.example.mello.models.Task
+import com.example.mello.models.User
 import com.example.mello.utils.Constants
 
 class TaskListActivity : BaseActivity() {
     private lateinit var mBoardDetails: Board
     private lateinit var mBoardDocumentId: String
+    lateinit var mAssignedMemberDetailList:ArrayList<User>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -48,13 +50,8 @@ class TaskListActivity : BaseActivity() {
         mBoardDetails = board
         hideProgressDialog()
         setupActionBar()
-        val addTaskList = Task(R.string.add_list.toString())
-        board.taskList.add(addTaskList)
-        val rvTaskList = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rv_task_list)
-        rvTaskList.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this, androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false)
-        rvTaskList.setHasFixedSize(true)
-        val adapter = com.example.mello.adapters.TaskListItemsAdapter(this, board.taskList)
-        rvTaskList.adapter = adapter
+        showProgressDialog(resources.getString(R.string.please_wait))
+        FirestoreClass().getAssignedMembersListDetails(this, board.assignedTo)
     }
     fun setupActionBar(){
         val toolBarMainActivity = findViewById<Toolbar>(R.id.toolbar_task_list_activity)
@@ -129,7 +126,18 @@ class TaskListActivity : BaseActivity() {
         intent.putExtra(Constants.BOARD_DETAIL, mBoardDetails)
         intent.putExtra(Constants.TASK_LIST_ITEM_POSITION, taskListPosition)
         intent.putExtra(Constants.CARD_LIST_ITEM_POSITION, cardPosition)
-        intent.putExtra(Constants.BOARD_MEMBERS_LIST, mBoardDetails.assignedTo)
+        intent.putExtra(Constants.BOARD_MEMBERS_LIST, mAssignedMemberDetailList)
         startActivityForResult(intent, CARD_DETAILS_REQUEST_CODE)
+    }
+    fun boardMemberDetailsList(list:ArrayList<User>){
+        mAssignedMemberDetailList = list
+        hideProgressDialog()
+        val addTaskList = Task(R.string.add_list.toString())
+        mBoardDetails.taskList.add(addTaskList)
+        val rvTaskList = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rv_task_list)
+        rvTaskList.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this, androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false)
+        rvTaskList.setHasFixedSize(true)
+        val adapter = com.example.mello.adapters.TaskListItemsAdapter(this, mBoardDetails.taskList)
+        rvTaskList.adapter = adapter
     }
 }

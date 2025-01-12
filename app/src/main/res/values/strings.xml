@@ -42,4 +42,6 @@
     <string name="delete_card">Delete Card</string>
     <string name="str_select_label_color">Select Label Color</string>
     <string name="str_select_members">Select Members</string>
+    <string name="default_notification_channel_id">default_notification_channel_id</string>
+    <string name="fcm_message">\"Title\"</string>
 </resources>

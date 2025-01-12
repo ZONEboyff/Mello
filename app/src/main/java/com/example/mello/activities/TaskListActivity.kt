@@ -140,4 +140,10 @@ class TaskListActivity : BaseActivity() {
         val adapter = com.example.mello.adapters.TaskListItemsAdapter(this, mBoardDetails.taskList)
         rvTaskList.adapter = adapter
     }
+    fun updateCardsInTaskList(taskListPosition: Int, cards: ArrayList<Card>){
+        mBoardDetails.taskList.removeAt(mBoardDetails.taskList.size - 1)
+        mBoardDetails.taskList[taskListPosition].cards = cards
+        showProgressDialog(resources.getString(R.string.please_wait))
+        FirestoreClass().addUpdateTaskList(this, mBoardDetails)
+    }
 }

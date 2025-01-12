@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -27,6 +28,7 @@ class CardDetailsActivity : BaseActivity() {
     private var mTaskListPosition : Int = -1
     private var mCardListPosition : Int = -1
     private var mSelectedColor = ""
+    private var mSelectedDueDateMilliSeconds:Long = 0
     private lateinit var mMembersDetailList:ArrayList<User>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +60,17 @@ class CardDetailsActivity : BaseActivity() {
             membersListDialog()
         }
         setupSelectedMembersList()
+        mSelectedDueDateMilliSeconds = mBoardDetails.taskList[mTaskListPosition].cards[mCardListPosition].dueDate
+        if(mSelectedDueDateMilliSeconds>0){
+            val simpleDateFormat = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.ENGLISH)
+            val selectedDate = simpleDateFormat.format(mSelectedDueDateMilliSeconds)
+            val tvSelectDueDate = findViewById<TextView>(R.id.tv_select_due_date)
+            tvSelectDueDate.text = selectedDate
+        }
+        val tvSelectDueDate = findViewById<TextView>(R.id.tv_select_due_date)
+        tvSelectDueDate.setOnClickListener {
+            showDatePicker()
+        }
     }
     private fun getIntentData(){
         if(intent.hasExtra(Constants.BOARD_DETAIL)){
@@ -101,7 +114,8 @@ class CardDetailsActivity : BaseActivity() {
            etNameCard.text.toString(),
             mBoardDetails.taskList[mTaskListPosition].cards[mCardListPosition].createdBy,
             mBoardDetails.taskList[mTaskListPosition].cards[mCardListPosition].assignedTo,
-            mSelectedColor
+            mSelectedColor,
+            mSelectedDueDateMilliSeconds
         )
         val taskList:ArrayList<Task> = mBoardDetails.taskList
         taskList.removeAt(taskList.size-1)
@@ -241,5 +255,21 @@ class CardDetailsActivity : BaseActivity() {
             findViewById<TextView>(R.id.tv_select_members).visibility = android.view.View.VISIBLE
             findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rv_selected_members_list).visibility = android.view.View.GONE
         }
+    }
+    private fun showDatePicker(){
+        val c = java.util.Calendar.getInstance()
+        val year = c.get(java.util.Calendar.YEAR)
+        val month = c.get(java.util.Calendar.MONTH)
+        val day = c.get(java.util.Calendar.DAY_OF_MONTH)
+        val dpd = android.app.DatePickerDialog(this,android.app.DatePickerDialog.OnDateSetListener { view, year, monthOfYear, dayOfMonth ->
+            val sDayOfMonth = if(dayOfMonth<10) "0$dayOfMonth" else "$dayOfMonth"
+            val sMonthOfYear = if((monthOfYear+1)<10) "0${monthOfYear+1}" else "${monthOfYear+1}"
+            val selectedDate = "$sDayOfMonth/$sMonthOfYear/$year"
+            findViewById<TextView>(R.id.tv_select_due_date).text = selectedDate
+            val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.ENGLISH)
+            val theDate = sdf.parse(selectedDate)
+            mSelectedDueDateMilliSeconds = theDate!!.time
+        },year,month,day)
+        dpd.show()
     }
 }
